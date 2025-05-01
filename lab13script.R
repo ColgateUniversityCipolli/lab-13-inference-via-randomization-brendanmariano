@@ -87,7 +87,7 @@ x.bar.diff = mean(t.diff.dat)
 x.bar.diff.lower = 0-x.bar.diff
 x.bar.diff.upper = 0+x.bar.diff
 
-p.val.far = mean(resamples.null.diff <= x.bar.diff.lower) + mean(resamples.null.diff >= x.bar.diff.upper)
+p.val.diff = mean(resamples.null.diff <= x.bar.diff.lower) + mean(resamples.null.diff >= x.bar.diff.upper)
 
 #2.c
 #Farther 
@@ -125,3 +125,118 @@ x.bar.upper.d = upper.d/sqrt(n)*sd.d
 ##########################
 # RANDOMIZATION
 ##########################
+
+############
+# Further Data
+############
+mu0 = 0
+R = 10000
+rand = tibble(xbars = rep(NA, 10000))
+samp.mean = mean(dat1$further)
+x.shift.f = dat1$further - mu0
+#Doing the randomization process
+for(i in 1:R){
+  curr.samp = x.shift * sample(x = c(-1,1), 
+                                   size = length(x.shift.f),
+                                   replace = T)
+  rand$xbars[i] = mean(curr.samp)
+}
+#Not necessary
+rand = rand |>
+  mutate(xbars = xbars + mu0)
+  
+#P-value
+furth.p = mean(rand<=samp.mean)
+
+#############
+# Closer Data
+#############
+
+rand.cl = tibble(xbars = rep(NA, 10000))
+samp.mean.cl = mean(dat1$closer)
+x.shift.c = dat1$further - mu0
+#Doing the randomization process
+for(i in 1:R){
+  curr.samp = x.shift * sample(x = c(-1,1), 
+                               size = length(x.shift.c),
+                               replace = T)
+  rand.cl$xbars[i] = mean(curr.samp)
+}
+#Not necessary
+rand.cl = rand.cl |>
+  mutate(xbars = xbars + mu0)
+
+#P-value
+closer.p = mean(rand>=samp.mean.cl)
+
+#############
+# Closer Data
+#############
+
+rand.diff = tibble(xbars = rep(NA, 10000))
+samp.mean.diff = mean(dat1$diff)
+x.shift.diff = dat1$diff - mu0
+#Doing the randomization process
+for(i in 1:R){
+  curr.samp = x.shift * sample(x = c(-1,1), 
+                               size = length(x.shift.diff),
+                               replace = T)
+  rand.diff$xbars[i] = mean(curr.samp)
+}
+#Not necessary
+rand.diff = rand.diff |>
+  mutate(xbars = xbars + mu0)
+
+#P-value
+delta = samp.mean.diff
+low = mu0 - delta 
+high = mu0 + delta
+diff.p = mean(rand.diff>=high) + mean(rand.diff<=low)
+#Why make the mirror value?
+
+
+
+######################
+# Confidence Intervals
+######################
+
+#############
+# Farther
+#############
+
+
+R = 20
+starting.point.further = mean(dat1$further)
+lower.val.further = starting.point.further
+repeat{
+  rand = tibble(xbars = rep(NA, 20))
+  samp.mean = mean(dat1$further)
+  x.shift.f = dat1$further - lower.val.further
+  #Doing the randomization process
+  for(i in 1:R){
+    curr.samp = x.shift * sample(x = c(-1,1), 
+                                 size = length(x.shift.f),
+                                 replace = T)
+    rand$xbars[i] = mean(curr.samp)
+  }
+  #Not necessary
+  rand = rand |>
+    mutate(xbars = xbars + lower.val.further)
+  
+  #P-value
+  further.p = mean(lower.val.further <= rand)
+  print(further.p)
+  if(further.p < .05) {#Should it be .025 or .5?
+    break
+  }
+  else{
+    lower.val.further = lower.val.further - .01
+  }
+}
+lower.val.further
+
+
+
+
+
+
