@@ -37,11 +37,41 @@ for the the further observations.
   where $f_Z(\cdot)$ and $F_Z(\cdot)$ are the Gaussian PDF and CDF and skew is the
   skewness of the data. What is the potential error in the computation of the 
   $p$-value when testing $H_0: \mu_X=0; H_a: \mu_X<0$ using the zebra finch further data? 
-
+  <<size = "scriptsize">>=
+library(tidyverse)
+library(e1071)
+dat1 = read_csv("zebrafinches.csv")
+dat = dat1$further
+t.val = as.numeric(t.test(dat, alternative = "less", mu = 0)$statistic)
+cdf.val = pnorm(t.val)
+pdf.val = dnorm(t.val)
+skew = skewness(dat)
+n = length(dat)
+(error = cdf.val + (skew/sqrt(n)*(2*(t.val)^2+1)/6*pdf.val))
+  @
   \item Compute the error for $t$ statistics from -10 to 10 and plot a line
   that shows the error across $t$. Continue to use the skewness and 
   the sample size for the zebra finch further data.
-
+<<size = "scriptsize">>=
+total.error = vector()
+seq = seq(-10,10,.01)
+for(t in seq){
+  curr.cdf.val = pnorm(t)
+  curr.pdf.val = dnorm(t)
+  skew = skewness(dat)
+  n = length(dat)
+  curr.error = (skew/sqrt(n)*(2*(t)^2+1)/6*curr.pdf.val)
+  total.error = append(total.error, curr.error)
+}
+total.error = tibble(x = total.error) |>
+mutate(seq)
+@
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[scale=0.35]{error.pdf}
+    \caption{}
+  \end{center}
+\end{figure}
   \item Suppose we wanted to have a tail probability within 10\% of the desired
   $\alpha=0.05$. Recall we did a left-tailed test using the further data.
   How large of a sample size would we need? That is, we need
@@ -50,6 +80,11 @@ for the the further observations.
   which yields
   \[ n = \left(\frac{\text{skew}}{6(0.10\alpha)} (2t^2 + 1) f_Z(t)\right)^2.\]
 \end{enumerate}
+<<size = "scriptsize">>= 
+t.val.c = qnorm(.05) 
+pdf.val.c = dnorm(t.val.c)
+(n.c = (skew/(6*(.1*.05))*(2*t.val.c^2+1)*pdf.val.c)^2)
+@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Question 3
@@ -68,12 +103,96 @@ sampling distribution of the $T$ statistic:
   resamples shifted to ensure they are consistent with the null hypotheses at the average 
   (i.e., here ensure the shifted resamples are 0 on average, corresponding
   to $t=0$, for each case). 
+  <<size = "scriptsize">>=
+#Farther
+t.dist.dat = vector()
+s = sd(dat)
+for(i in 1:10000){
+  curr.val = (mean(sample(dat, replace = TRUE)) - 0)/(s/sqrt(n))
+  t.dist.dat = append(t.dist.dat, curr.val)
+}
+ncp = -1*(mean(t.dist.dat))
+resamples.null.farther = t.dist.dat + ncp
+(mean(resamples.null.farther))
+
+#Closer
+t.close.dat = vector()
+s = sd(dat1$closer)
+for(i in 1:10000){
+  curr.val = (mean(sample(dat1$closer, replace = TRUE)) - 0)/(s/sqrt(n))
+  t.close.dat = append(t.close.dat, curr.val)
+}
+ncp2 = -1*(mean(t.close.dat))
+resamples.null.closer = t.close.dat + ncp2
+(mean(resamples.null.closer))
+#Difference
+t.diff.dat = vector()
+s = sd(dat1$diff)
+for(i in 1:10000){
+  curr.val = (mean(sample(dat1$diff, replace = TRUE)) - 0)/(s/sqrt(n))
+  t.diff.dat = append(t.diff.dat, curr.val)
+}
+ncp3 = -1*(mean(t.diff.dat))
+resamples.null.diff = t.diff.dat + ncp3
+(mean(resamples.null.diff))
+@
   \item Compute the bootstrap $p$-value for each test using the shifted resamples. 
   How do these compare to the $t$-test $p$-values?
+  <<size = "scriptsize">>=
+#Farther p-value
+x.bar.far = mean(t.dist.dat)
+(p.val.far = mean(resamples.null.farther <= x.bar.far))
+#Closer p-value
+x.bar.close = mean(t.close.dat)
+(p.val.close = mean(resamples.null.closer >=x.bar.close))
+#Difference p-value
+x.bar.diff = mean(t.diff.dat)
+x.bar.diff.lower = 0-x.bar.diff
+x.bar.diff.upper = 0+x.bar.diff
+
+(p.val.diff = mean(resamples.null.diff <= x.bar.diff.lower) + mean(resamples.null.diff >= x.bar.diff.upper))
+@
     \item What is the 5$^{th}$ percentile of the shifted resamples under the null hypothesis? 
   Note this value approximates $t_{0.05, n-1}$. Compare these values in each case.
+  <<size = "scriptsize">>=
+#Farther 
+quantile(resamples.null.farther, prob = .025)
+#Closer
+quantile(resamples.null.closer, prob = .025)
+#Difference
+quantile(resamples.null.diff, prob = .025)
+@
+
   \item Compute the bootstrap confidence intervals using the resamples. How do these 
   compare to the $t$-test confidence intervals?
+  <<size = "scriptsize">>=
+#Farther 
+n = length(dat1$further)
+sd.f = sd(dat1$further)
+lower.f = quantile(t.dist.dat, prob = .025)
+x.bar.lower.f = lower.f/sqrt(n)*sd.f
+upper.f = quantile(t.dist.dat, prob = .975)
+x.bar.upper.f = upper.f/sqrt(n)*sd.f
+
+c(x.bar.lower.f,x.bar.upper.f)
+#Closer
+sd.c = sd(dat1$closer)
+lower.c = quantile(t.close.dat, prob = .025)
+x.bar.lower.c = lower.c/sqrt(n)*sd.c
+upper.c = quantile(t.close.dat, prob = .975)
+x.bar.upper.c = upper.c/sqrt(n)*sd.c
+
+c(x.bar.lower.c,x.bar.upper.c)
+#Difference
+sd.d = sd(dat1$diff)
+lower.d = quantile(t.diff.dat, prob = .025)
+x.bar.lower.d = lower.d/sqrt(n)*sd.d
+upper.d = quantile(t.diff.dat, prob = .975)
+x.bar.upper.d = upper.d/sqrt(n)*sd.d
+
+c(x.bar.lower.d,x.bar.upper.d)
+
+@
 \end{enumerate}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -85,8 +204,288 @@ randomization procedure.
 \begin{enumerate}
 \item Now, consider the zebra finch data. We do not know the generating distributions
 for the closer, further, and difference data, so perform the randomization procedure
+<<size = "scriptsize">>=
+############
+# Further Data
+############
+mu0 = 0
+R = 10000
+rand = tibble(xbars = rep(NA, 10000))
+samp.mean = mean(dat1$further)
+x.shift = dat1$further - mu0
+#Doing the randomization process
+for(i in 1:R){
+  curr.samp = x.shift * sample(x = c(-1,1), 
+                                   size = length(x.shift),
+                                   replace = T)
+  rand$xbars[i] = mean(curr.samp)
+}
+#Shifting back
+rand1 = rand |>
+  mutate(xbars = xbars + mu0)
+############
+# Closer Data
+############
+rand.cl = tibble(xbars = rep(NA, 10000))
+samp.mean.cl = mean(dat1$closer)
+x.shift = dat1$further - mu0
+#Doing the randomization process
+for(i in 1:R){
+  curr.samp = x.shift * sample(x = c(-1,1), 
+                               size = length(x.shift),
+                               replace = T)
+  rand.cl$xbars[i] = mean(curr.samp)
+}
+#Shifting back
+rand.cl = rand.cl |>
+  mutate(xbars = xbars + mu0)
+#############
+# Different Data
+#############
+
+rand.diff = tibble(xbars = rep(NA, 10000))
+samp.mean.diff = mean(dat1$diff)
+x.shift = dat1$diff - mu0
+#Doing the randomization process
+for(i in 1:R){
+  curr.samp = x.shift * sample(x = c(-1,1), 
+                               size = length(x.shift),
+                               replace = T)
+  rand.diff$xbars[i] = mean(curr.samp)
+}
+#Shifting back
+rand.diff = rand.diff |>
+  mutate(xbars = xbars + mu0)
+@
   \item Compute the randomization test $p$-value for each test.
+  <<size = "scriptsize">>=
+#Farther
+(furth.p = mean(rand1<=samp.mean))
+
+#Closer
+(closer.p = mean(rand>=samp.mean.cl))
+
+#Different
+delta = samp.mean.diff
+low = mu0 - delta 
+high = mu0 + delta
+(diff.p = mean(rand.diff>=high) + mean(rand.diff<=low))
+@
   \item Compute the randomization confidence interval by iterating over values of $\mu_0$.\\
+<<size = "scriptsize">>=
+  ##################
+# Farther
+##################
+
+# Lower val
+R = 1000
+starting.point = mean(dat1$further)
+lower.val = starting.point
+samp.mean = mean(dat1$further)
+repeat{
+  rand = tibble(xbars = rep(NA, R))
+  x.shift = dat1$further - lower.val
+  #Doing the randomization process
+  for(i in 1:R){
+    curr.samp = x.shift * sample(x = c(-1,1), 
+                                 size = length(x.shift),
+                                 replace = T)
+    rand$xbars[i] = mean(curr.samp)
+  }
+  #Shifting back
+  rand = rand |>
+    mutate(xbars = xbars + lower.val)
+  
+  #P-value
+  delta = abs(samp.mean - lower.val)
+  lower = lower.val - delta #Mirror?
+  upper = lower.val + delta
+  p.val = mean(rand$xbars <= lower) + mean(rand$xbars >= upper)
+  
+  if(p.val < .05) {#Should it be .025 or .5?
+    break
+  }
+  else{
+    lower.val = lower.val - .0001
+  }
+}
+lower.val
+
+#Upper val
+upper.val = starting.point
+samp.mean = mean(dat1$further)
+repeat{
+  rand = tibble(xbars = rep(NA, 1000))
+  x.shift = dat1$further - upper.val
+  #Doing the randomization process
+  for(i in 1:R){
+    curr.samp = x.shift * sample(x = c(-1,1), 
+                                   size = length(x.shift),
+                                   replace = T)
+    rand$xbars[i] = mean(curr.samp)
+  }
+  #Shifting back
+  rand = rand |>
+    mutate(xbars = xbars + upper.val)
+  
+  #P-value
+  delta = abs(samp.mean - upper.val)
+  lower = upper.val - delta #Mirror?
+  upper = upper.val + delta
+  p.val = mean(rand$xbars <= lower) + mean(rand$xbars >= upper)
+  if(p.val < .05) {#Should it be .025 or .5?
+    break
+  }
+  else{
+    upper.val = upper.val + .0001
+  }
+}
+upper.val
+
+c(lower.val,upper.val)
+###############
+# Closer
+###############
+
+# Lower val
+R = 1000
+starting.point = mean(dat1$closer)
+lower.val = starting.point
+samp.mean = mean(dat1$closer)
+repeat{
+  rand = tibble(xbars = rep(NA, R))
+  x.shift = dat1$closer - lower.val
+  #Doing the randomization process
+  for(i in 1:R){
+    curr.samp = x.shift * sample(x = c(-1,1), 
+                                 size = length(x.shift),
+                                 replace = T)
+    rand$xbars[i] = mean(curr.samp)
+  }
+  #Shifting back
+  rand = rand |>
+    mutate(xbars = xbars + lower.val)
+  
+  #P-value
+  delta = abs(samp.mean - lower.val)
+  lower = lower.val - delta #Mirror?
+  upper = lower.val + delta
+  p.val = mean(rand$xbars <= lower) + mean(rand$xbars >= upper)
+  
+  if(p.val < .05) {#Should it be .025 or .5?
+    break
+  }
+  else{
+    lower.val = lower.val - .0001
+  }
+}
+lower.val
+
+#Upper val
+upper.val = starting.point
+samp.mean = mean(dat1$closer)
+repeat{
+  rand = tibble(xbars = rep(NA, 1000))
+  x.shift = dat1$closer - upper.val
+  #Doing the randomization process
+  for(i in 1:R){
+    curr.samp = x.shift * sample(x = c(-1,1), 
+                                 size = length(x.shift),
+                                 replace = T)
+    rand$xbars[i] = mean(curr.samp)
+  }
+  #Shifting back
+  rand = rand |>
+    mutate(xbars = xbars + upper.val)
+  
+  #P-value
+  delta = abs(samp.mean - upper.val)
+  lower = upper.val - delta #Mirror?
+  upper = upper.val + delta
+  p.val = mean(rand$xbars <= lower) + mean(rand$xbars >= upper)
+  if(p.val < .05) {#Should it be .025 or .5?
+    break
+  }
+  else{
+    upper.val = upper.val + .0001
+  }
+}
+upper.val
+
+c(lower.val,upper.val)
+###############
+# Difference
+###############
+
+# Lower val
+R = 1000
+starting.point = mean(dat1$diff)
+lower.val = starting.point
+samp.mean = mean(dat1$diff)
+repeat{
+  rand = tibble(xbars = rep(NA, R))
+  x.shift = dat1$diff - lower.val
+  #Doing the randomization process
+  for(i in 1:R){
+    curr.samp = x.shift * sample(x = c(-1,1), 
+                                 size = length(x.shift),
+                                 replace = T)
+    rand$xbars[i] = mean(curr.samp)
+  }
+  #Shifting back
+  rand = rand |>
+    mutate(xbars = xbars + lower.val)
+  
+  #P-value
+  delta = abs(samp.mean - lower.val)
+  lower = lower.val - delta #Mirror?
+  upper = lower.val + delta
+  p.val = mean(rand$xbars <= lower) + mean(rand$xbars >= upper)
+  
+  if(p.val < .05) {#Should it be .025 or .5?
+    break
+  }
+  else{
+    lower.val = lower.val - .0001
+  }
+}
+lower.val
+
+#Upper val
+upper.val = starting.point
+samp.mean = mean(dat1$diff)
+repeat{
+  rand = tibble(xbars = rep(NA, 1000))
+  x.shift = dat1$diff - upper.val
+  #Doing the randomization process
+  for(i in 1:R){
+    curr.samp = x.shift * sample(x = c(-1,1), 
+                                 size = length(x.shift),
+                                 replace = T)
+    rand$xbars[i] = mean(curr.samp)
+  }
+  #Shifting back
+  rand = rand |>
+    mutate(xbars = xbars + upper.val)
+  
+  #P-value
+  delta = abs(samp.mean - upper.val)
+  lower = upper.val - delta #Mirror?
+  upper = upper.val + delta
+  p.val = mean(rand$xbars <= lower) + mean(rand$xbars >= upper)
+  if(p.val < .05) {#Should it be .025 or .5?
+    break
+  }
+  else{
+    upper.val = upper.val + .0001
+  }
+}
+upper.val
+
+c(lower.val,upper.val)
+
+@
+
   \textbf{Hint:} You can ``search" for the lower bound from $Q_1$ and subtracting by 0.0001, 
   and the upper bound using $Q_3$ and increasing by 0.0001. You will continue until you find 
   the first value for which the two-sided $p$-value is greater than or equal to 0.05.

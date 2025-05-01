@@ -204,27 +204,30 @@ diff.p = mean(rand.diff>=high) + mean(rand.diff<=low)
 # Farther
 #############
 
-
-R = 20
+# Lower val
+R = 1000
 starting.point.further = mean(dat1$further)
 lower.val.further = starting.point.further
+samp.mean = mean(dat1$further)
 repeat{
-  rand = tibble(xbars = rep(NA, 20))
-  samp.mean = mean(dat1$further)
+  rand = tibble(xbars = rep(NA, 1000))
   x.shift.f = dat1$further - lower.val.further
   #Doing the randomization process
   for(i in 1:R){
-    curr.samp = x.shift * sample(x = c(-1,1), 
+    curr.samp = x.shift.f * sample(x = c(-1,1), 
                                  size = length(x.shift.f),
                                  replace = T)
     rand$xbars[i] = mean(curr.samp)
   }
-  #Not necessary
+  #Shifting back
   rand = rand |>
     mutate(xbars = xbars + lower.val.further)
   
   #P-value
-  further.p = mean(lower.val.further <= rand)
+  delta = abs(samp.mean) - lower.val.further
+  lower = lower.val.further - delta #Mirror?
+  upper = lower.val.further + delta
+  further.p = mean(rand$xbars <= lower) + mean(rand$xbars >= upper )
   print(further.p)
   if(further.p < .05) {#Should it be .025 or .5?
     break
@@ -235,8 +238,58 @@ repeat{
 }
 lower.val.further
 
+#Upper val
+R = 1000
+starting.point = mean(dat1$further)
+upper.val.further = starting.point.further
+samp.mean = mean(dat1$further)
+repeat{
+  rand = tibble(xbars = rep(NA, 1000))
+  x.shift.f = dat1$further - upper.val.further
+  #Doing the randomization process
+  for(i in 1:R){
+    curr.samp = x.shift.f * sample(x = c(-1,1), 
+                                   size = length(x.shift.f),
+                                   replace = T)
+    rand$xbars[i] = mean(curr.samp)
+  }
+  #Shifting back
+  rand = rand |>
+    mutate(xbars = xbars + upper.val.further)
+  
+  #P-value
+  delta = abs(samp.mean) - upper.val.further
+  lower = upper.val.further - delta #Mirror?
+  upper = upper.val.further + delta
+  further.p = mean(rand$xbars <= lower) + mean(rand$xbars >= upper )
+  if(further.p < .05) {#Should it be .025 or .5?
+    break
+  }
+  else{
+    upper.val.further = upper.val.further + .01
+  }
+}
+upper.val.further
 
 
 
+#Extra work
+rand = tibble(xbars = rep(NA, 1000))
+lower.val.further = -.5
+x.shift.f = dat1$further - lower.val.further
+#Doing the randomization process
+for(i in 1:R){
+  curr.samp = x.shift.f * sample(x = c(-1,1), 
+                                 size = length(x.shift.f),
+                                 replace = T)
+  rand$xbars[i] = mean(curr.samp)
+}
+
+rand = rand |>
+  mutate(xbars = xbars + lower.val.further)
+
+
+ggplot() + 
+  geom_density(data = rand, aes(x = xbars))
 
 
