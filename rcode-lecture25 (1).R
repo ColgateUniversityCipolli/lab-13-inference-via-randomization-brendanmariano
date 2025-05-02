@@ -419,7 +419,6 @@ randomization.plot <- ggplot() +
 R <- 1000
 mu0.iterate <- 0.01
 starting.point <- mean(dat$`PP Opp`)
-
 mu.lower <- starting.point
 repeat{
   rand <- tibble(xbars = rep(NA, R))

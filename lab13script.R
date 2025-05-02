@@ -27,11 +27,15 @@ for(t in seq){
   total.error = append(total.error, curr.error)
 }
 total.error = tibble(x = total.error) |>
-  mutate(seq)
+  mutate(seq) 
 
 ggplot() +
-  geom_line(data = total.error, aes(x = seq, y = x))
+  geom_line(data = total.error, aes(x = seq, y = x)) +
+  xlab("T-Statistic") +
+  ylab("Error") +
+  ggtitle("Error vs T-Statistic")
 
+#Why does error become negative?
 #As value increases beyond null hypothesis, total error increases?
 
 #1.c
@@ -53,6 +57,7 @@ for(i in 1:10000){
 }
 ncp = -1*(mean(t.dist.dat))
 resamples.null.farther = t.dist.dat + ncp
+(mean(resamples.null.farther))
 
 #Closer
 t.close.dat = vector()
@@ -63,6 +68,7 @@ for(i in 1:10000){
 }
 ncp2 = -1*(mean(t.close.dat))
 resamples.null.closer = t.close.dat + ncp2
+(mean(resamples.null.closer))
 #Difference
 t.diff.dat = vector()
 s = sd(dat1$diff)
@@ -72,22 +78,23 @@ for(i in 1:10000){
 }
 ncp3 = -1*(mean(t.diff.dat))
 resamples.null.diff = t.diff.dat + ncp3
+(mean(resamples.null.diff))
 #2.b
 ##########################
 # CALCULATING P-VALUES
 ##########################
 #Farther p-value
 x.bar.far = mean(t.dist.dat)
-p.val.far = mean(resamples.null.farther <= x.bar.far)
+(p.val.far = mean(resamples.null.farther <= x.bar.far))
 #Closer p-value
 x.bar.close = mean(t.close.dat)
-p.val.close = mean(resamples.null.closer >=x.bar.close) #Why greater than or equal to?
+(p.val.close = mean(resamples.null.closer >=x.bar.close))
 #Difference p-value
 x.bar.diff = mean(t.diff.dat)
 x.bar.diff.lower = 0-x.bar.diff
 x.bar.diff.upper = 0+x.bar.diff
 
-p.val.diff = mean(resamples.null.diff <= x.bar.diff.lower) + mean(resamples.null.diff >= x.bar.diff.upper)
+(p.val.diff = mean(resamples.null.diff <= x.bar.diff.lower) + mean(resamples.null.diff >= x.bar.diff.upper))
 
 #2.c
 #Farther 
@@ -133,20 +140,20 @@ mu0 = 0
 R = 10000
 rand = tibble(xbars = rep(NA, 10000))
 samp.mean = mean(dat1$further)
-x.shift.f = dat1$further - mu0
+x.shift = dat1$further - mu0
 #Doing the randomization process
 for(i in 1:R){
   curr.samp = x.shift * sample(x = c(-1,1), 
-                                   size = length(x.shift.f),
+                                   size = length(x.shift),
                                    replace = T)
   rand$xbars[i] = mean(curr.samp)
 }
 #Not necessary
-rand = rand |>
+rand1 = rand |>
   mutate(xbars = xbars + mu0)
   
 #P-value
-furth.p = mean(rand<=samp.mean)
+furth.p = mean(rand1<=samp.mean)
 
 #############
 # Closer Data
@@ -154,11 +161,11 @@ furth.p = mean(rand<=samp.mean)
 
 rand.cl = tibble(xbars = rep(NA, 10000))
 samp.mean.cl = mean(dat1$closer)
-x.shift.c = dat1$further - mu0
+x.shift = dat1$further - mu0
 #Doing the randomization process
 for(i in 1:R){
   curr.samp = x.shift * sample(x = c(-1,1), 
-                               size = length(x.shift.c),
+                               size = length(x.shift),
                                replace = T)
   rand.cl$xbars[i] = mean(curr.samp)
 }
@@ -170,16 +177,16 @@ rand.cl = rand.cl |>
 closer.p = mean(rand>=samp.mean.cl)
 
 #############
-# Closer Data
+# Different Data
 #############
 
 rand.diff = tibble(xbars = rep(NA, 10000))
 samp.mean.diff = mean(dat1$diff)
-x.shift.diff = dat1$diff - mu0
+x.shift = dat1$diff - mu0
 #Doing the randomization process
 for(i in 1:R){
   curr.samp = x.shift * sample(x = c(-1,1), 
-                               size = length(x.shift.diff),
+                               size = length(x.shift),
                                replace = T)
   rand.diff$xbars[i] = mean(curr.samp)
 }
@@ -200,96 +207,217 @@ diff.p = mean(rand.diff>=high) + mean(rand.diff<=low)
 # Confidence Intervals
 ######################
 
-#############
+##################
 # Farther
-#############
+##################
 
 # Lower val
 R = 1000
-starting.point.further = mean(dat1$further)
-lower.val.further = starting.point.further
+starting.point = mean(dat1$further)
+lower.val = starting.point.further
 samp.mean = mean(dat1$further)
 repeat{
-  rand = tibble(xbars = rep(NA, 1000))
-  x.shift.f = dat1$further - lower.val.further
+  rand = tibble(xbars = rep(NA, R))
+  x.shift = dat1$further - lower.val
   #Doing the randomization process
   for(i in 1:R){
-    curr.samp = x.shift.f * sample(x = c(-1,1), 
-                                 size = length(x.shift.f),
+    curr.samp = x.shift * sample(x = c(-1,1), 
+                                 size = length(x.shift),
                                  replace = T)
     rand$xbars[i] = mean(curr.samp)
   }
   #Shifting back
   rand = rand |>
-    mutate(xbars = xbars + lower.val.further)
+    mutate(xbars = xbars + lower.val)
   
   #P-value
-  delta = abs(samp.mean) - lower.val.further
-  lower = lower.val.further - delta #Mirror?
-  upper = lower.val.further + delta
-  further.p = mean(rand$xbars <= lower) + mean(rand$xbars >= upper )
-  print(further.p)
-  if(further.p < .05) {#Should it be .025 or .5?
+  delta = abs(samp.mean - lower.val)
+  lower = lower.val - delta #Mirror?
+  upper = lower.val + delta
+  p.val = mean(rand$xbars <= lower) + mean(rand$xbars >= upper)
+  
+  if(p.val < .05) {#Should it be .025 or .5?
     break
   }
   else{
-    lower.val.further = lower.val.further - .01
+    lower.val = lower.val - .0001
   }
 }
-lower.val.further
+lower.val
 
 #Upper val
-R = 1000
-starting.point = mean(dat1$further)
-upper.val.further = starting.point.further
+upper.val = starting.point.further
 samp.mean = mean(dat1$further)
 repeat{
   rand = tibble(xbars = rep(NA, 1000))
-  x.shift.f = dat1$further - upper.val.further
+  x.shift = dat1$further - upper.val
   #Doing the randomization process
   for(i in 1:R){
-    curr.samp = x.shift.f * sample(x = c(-1,1), 
-                                   size = length(x.shift.f),
+    curr.samp = x.shift * sample(x = c(-1,1), 
+                                   size = length(x.shift),
                                    replace = T)
     rand$xbars[i] = mean(curr.samp)
   }
   #Shifting back
   rand = rand |>
-    mutate(xbars = xbars + upper.val.further)
+    mutate(xbars = xbars + upper.val)
   
   #P-value
-  delta = abs(samp.mean) - upper.val.further
-  lower = upper.val.further - delta #Mirror?
-  upper = upper.val.further + delta
-  further.p = mean(rand$xbars <= lower) + mean(rand$xbars >= upper )
-  if(further.p < .05) {#Should it be .025 or .5?
+  delta = abs(samp.mean - upper.val)
+  lower = upper.val - delta #Mirror?
+  upper = upper.val + delta
+  p.val = mean(rand$xbars <= lower) + mean(rand$xbars >= upper)
+  if(p.val < .05) {#Should it be .025 or .5?
     break
   }
   else{
-    upper.val.further = upper.val.further + .01
+    upper.val = upper.val + .0001
   }
 }
-upper.val.further
+upper.val
 
+c(lower.val,upper.val)
+###############
+# Closer
+###############
 
-
-#Extra work
-rand = tibble(xbars = rep(NA, 1000))
-lower.val.further = -.5
-x.shift.f = dat1$further - lower.val.further
-#Doing the randomization process
-for(i in 1:R){
-  curr.samp = x.shift.f * sample(x = c(-1,1), 
-                                 size = length(x.shift.f),
+# Lower val
+R = 1000
+starting.point = mean(dat1$closer)
+lower.val = starting.point
+samp.mean = mean(dat1$closer)
+repeat{
+  rand = tibble(xbars = rep(NA, R))
+  x.shift = dat1$closer - lower.val
+  #Doing the randomization process
+  for(i in 1:R){
+    curr.samp = x.shift * sample(x = c(-1,1), 
+                                 size = length(x.shift),
                                  replace = T)
-  rand$xbars[i] = mean(curr.samp)
+    rand$xbars[i] = mean(curr.samp)
+  }
+  #Shifting back
+  rand = rand |>
+    mutate(xbars = xbars + lower.val)
+  
+  #P-value
+  delta = abs(samp.mean - lower.val)
+  lower = lower.val - delta #Mirror?
+  upper = lower.val + delta
+  p.val = mean(rand$xbars <= lower) + mean(rand$xbars >= upper)
+  
+  if(p.val < .05) {#Should it be .025 or .5?
+    break
+  }
+  else{
+    lower.val = lower.val - .0001
+  }
 }
+lower.val
 
-rand = rand |>
-  mutate(xbars = xbars + lower.val.further)
+#Upper val
+upper.val = starting.point
+samp.mean = mean(dat1$closer)
+repeat{
+  rand = tibble(xbars = rep(NA, 1000))
+  x.shift = dat1$closer - upper.val
+  #Doing the randomization process
+  for(i in 1:R){
+    curr.samp = x.shift * sample(x = c(-1,1), 
+                                 size = length(x.shift),
+                                 replace = T)
+    rand$xbars[i] = mean(curr.samp)
+  }
+  #Shifting back
+  rand = rand |>
+    mutate(xbars = xbars + upper.val)
+  
+  #P-value
+  delta = abs(samp.mean - upper.val)
+  lower = upper.val - delta #Mirror?
+  upper = upper.val + delta
+  p.val = mean(rand$xbars <= lower) + mean(rand$xbars >= upper)
+  if(p.val < .05) {#Should it be .025 or .5?
+    break
+  }
+  else{
+    upper.val = upper.val + .0001
+  }
+}
+upper.val
+
+c(lower.val,upper.val)
+###############
+# Difference
+###############
+
+# Lower val
+R = 1000
+starting.point = mean(dat1$diff)
+lower.val = starting.point
+samp.mean = mean(dat1$diff)
+repeat{
+  rand = tibble(xbars = rep(NA, R))
+  x.shift = dat1$diff - lower.val
+  #Doing the randomization process
+  for(i in 1:R){
+    curr.samp = x.shift * sample(x = c(-1,1), 
+                                 size = length(x.shift),
+                                 replace = T)
+    rand$xbars[i] = mean(curr.samp)
+  }
+  #Shifting back
+  rand = rand |>
+    mutate(xbars = xbars + lower.val)
+  
+  #P-value
+  delta = abs(samp.mean - lower.val)
+  lower = lower.val - delta #Mirror?
+  upper = lower.val + delta
+  p.val = mean(rand$xbars <= lower) + mean(rand$xbars >= upper)
+  
+  if(p.val < .05) {#Should it be .025 or .5?
+    break
+  }
+  else{
+    lower.val = lower.val - .0001
+  }
+}
+lower.val
+
+#Upper val
+upper.val = starting.point
+samp.mean = mean(dat1$diff)
+repeat{
+  rand = tibble(xbars = rep(NA, 1000))
+  x.shift = dat1$diff - upper.val
+  #Doing the randomization process
+  for(i in 1:R){
+    curr.samp = x.shift * sample(x = c(-1,1), 
+                                 size = length(x.shift),
+                                 replace = T)
+    rand$xbars[i] = mean(curr.samp)
+  }
+  #Shifting back
+  rand = rand |>
+    mutate(xbars = xbars + upper.val)
+  
+  #P-value
+  delta = abs(samp.mean - upper.val)
+  lower = upper.val - delta #Mirror?
+  upper = upper.val + delta
+  p.val = mean(rand$xbars <= lower) + mean(rand$xbars >= upper)
+  if(p.val < .05) {#Should it be .025 or .5?
+    break
+  }
+  else{
+    upper.val = upper.val + .0001
+  }
+}
+upper.val
+
+c(lower.val,upper.val)
 
 
-ggplot() + 
-  geom_density(data = rand, aes(x = xbars))
 
 

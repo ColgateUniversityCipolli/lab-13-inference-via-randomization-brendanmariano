@@ -69,7 +69,6 @@ mutate(seq)
 \begin{figure}[H]
   \begin{center}
     \includegraphics[scale=0.35]{error.pdf}
-    \caption{}
   \end{center}
 \end{figure}
   \item Suppose we wanted to have a tail probability within 10\% of the desired
@@ -156,11 +155,11 @@ x.bar.diff.upper = 0+x.bar.diff
   Note this value approximates $t_{0.05, n-1}$. Compare these values in each case.
   <<size = "scriptsize">>=
 #Farther 
-quantile(resamples.null.farther, prob = .025)
+quantile(resamples.null.farther, prob = .05)
 #Closer
-quantile(resamples.null.closer, prob = .025)
+quantile(resamples.null.closer, prob = .05)
 #Difference
-quantile(resamples.null.diff, prob = .025)
+quantile(resamples.null.diff, prob = .05)
 @
 
   \item Compute the bootstrap confidence intervals using the resamples. How do these 

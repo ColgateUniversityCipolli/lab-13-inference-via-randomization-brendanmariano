@@ -132,7 +132,6 @@ for the the further observations.
 \begin{figure}[H]
   \begin{center}
     \includegraphics[scale=0.35]{error.pdf}
-    \caption{}
   \end{center}
 \end{figure}
   \item Suppose we wanted to have a tail probability within 10\% of the desired
@@ -188,7 +187,7 @@ sampling distribution of the $T$ statistic:
 \hldef{(}\hlkwd{mean}\hldef{(resamples.null.farther))}
 \end{alltt}
 \begin{verbatim}
-## [1] 3.934297e-16
+## [1] 4.4591e-16
 \end{verbatim}
 \begin{alltt}
 \hlcom{#Closer}
@@ -203,7 +202,7 @@ sampling distribution of the $T$ statistic:
 \hldef{(}\hlkwd{mean}\hldef{(resamples.null.closer))}
 \end{alltt}
 \begin{verbatim}
-## [1] 5.778711e-16
+## [1] 1.387557e-16
 \end{verbatim}
 \begin{alltt}
 \hlcom{#Difference}
@@ -218,7 +217,7 @@ sampling distribution of the $T$ statistic:
 \hldef{(}\hlkwd{mean}\hldef{(resamples.null.diff))}
 \end{alltt}
 \begin{verbatim}
-## [1] 8.424261e-16
+## [1] 2.775558e-18
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -261,27 +260,27 @@ sampling distribution of the $T$ statistic:
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlcom{#Farther }
-\hlkwd{quantile}\hldef{(resamples.null.farther,} \hlkwc{prob} \hldef{=} \hlnum{.025}\hldef{)}
+\hlkwd{quantile}\hldef{(resamples.null.farther,} \hlkwc{prob} \hldef{=} \hlnum{.05}\hldef{)}
 \end{alltt}
 \begin{verbatim}
-##     2.5% 
-## -2.02765
+##       5% 
+## -1.68801
 \end{verbatim}
 \begin{alltt}
 \hlcom{#Closer}
-\hlkwd{quantile}\hldef{(resamples.null.closer,} \hlkwc{prob} \hldef{=} \hlnum{.025}\hldef{)}
+\hlkwd{quantile}\hldef{(resamples.null.closer,} \hlkwc{prob} \hldef{=} \hlnum{.05}\hldef{)}
 \end{alltt}
 \begin{verbatim}
-##      2.5% 
-## -1.902959
+##        5% 
+## -1.591783
 \end{verbatim}
 \begin{alltt}
 \hlcom{#Difference}
-\hlkwd{quantile}\hldef{(resamples.null.diff,} \hlkwc{prob} \hldef{=} \hlnum{.025}\hldef{)}
+\hlkwd{quantile}\hldef{(resamples.null.diff,} \hlkwc{prob} \hldef{=} \hlnum{.05}\hldef{)}
 \end{alltt}
 \begin{verbatim}
-##      2.5% 
-## -1.834268
+##        5% 
+## -1.573562
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -303,7 +302,7 @@ sampling distribution of the $T$ statistic:
 \end{alltt}
 \begin{verbatim}
 ##       2.5%      97.5% 
-## -0.2556874 -0.1554911
+## -0.2557137 -0.1556658
 \end{verbatim}
 \begin{alltt}
 \hlcom{#Closer}
@@ -317,7 +316,7 @@ sampling distribution of the $T$ statistic:
 \end{alltt}
 \begin{verbatim}
 ##      2.5%     97.5% 
-## 0.1200736 0.1926468
+## 0.1199085 0.1924706
 \end{verbatim}
 \begin{alltt}
 \hlcom{#Difference}
@@ -331,7 +330,7 @@ sampling distribution of the $T$ statistic:
 \end{alltt}
 \begin{verbatim}
 ##      2.5%     97.5% 
-## 0.2810613 0.4434062
+## 0.2795398 0.4427235
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -418,7 +417,7 @@ for the closer, further, and difference data, so perform the randomization proce
 \hldef{(closer.p} \hlkwb{=} \hlkwd{mean}\hldef{(rand}\hlopt{>=}\hldef{samp.mean.cl))}
 \end{alltt}
 \begin{verbatim}
-## [1] 4e-04
+## [1] 1e-04
 \end{verbatim}
 \begin{alltt}
 \hlcom{#Different}
@@ -475,7 +474,7 @@ for the closer, further, and difference data, so perform the randomization proce
 \hldef{lower.val}
 \end{alltt}
 \begin{verbatim}
-## [1] -0.2534244
+## [1] -0.2548244
 \end{verbatim}
 \begin{alltt}
 \hlcom{#Upper val}
@@ -510,13 +509,13 @@ for the closer, further, and difference data, so perform the randomization proce
 \hldef{upper.val}
 \end{alltt}
 \begin{verbatim}
-## [1] -0.1525244
+## [1] -0.1517244
 \end{verbatim}
 \begin{alltt}
 \hlkwd{c}\hldef{(lower.val,upper.val)}
 \end{alltt}
 \begin{verbatim}
-## [1] -0.2534244 -0.1525244
+## [1] -0.2548244 -0.1517244
 \end{verbatim}
 \begin{alltt}
 \hlcom{###############}
@@ -558,7 +557,7 @@ for the closer, further, and difference data, so perform the randomization proce
 \hldef{lower.val}
 \end{alltt}
 \begin{verbatim}
-## [1] 0.1204231
+## [1] 0.1198231
 \end{verbatim}
 \begin{alltt}
 \hlcom{#Upper val}
@@ -593,13 +592,13 @@ for the closer, further, and difference data, so perform the randomization proce
 \hldef{upper.val}
 \end{alltt}
 \begin{verbatim}
-## [1] 0.1937231
+## [1] 0.1928231
 \end{verbatim}
 \begin{alltt}
 \hlkwd{c}\hldef{(lower.val,upper.val)}
 \end{alltt}
 \begin{verbatim}
-## [1] 0.1204231 0.1937231
+## [1] 0.1198231 0.1928231
 \end{verbatim}
 \begin{alltt}
 \hlcom{###############}
@@ -641,7 +640,7 @@ for the closer, further, and difference data, so perform the randomization proce
 \hldef{lower.val}
 \end{alltt}
 \begin{verbatim}
-## [1] 0.2745475
+## [1] 0.2769475
 \end{verbatim}
 \begin{alltt}
 \hlcom{#Upper val}
@@ -676,13 +675,13 @@ for the closer, further, and difference data, so perform the randomization proce
 \hldef{upper.val}
 \end{alltt}
 \begin{verbatim}
-## [1] 0.4411475
+## [1] 0.4410475
 \end{verbatim}
 \begin{alltt}
 \hlkwd{c}\hldef{(lower.val,upper.val)}
 \end{alltt}
 \begin{verbatim}
-## [1] 0.2745475 0.4411475
+## [1] 0.2769475 0.4410475
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
